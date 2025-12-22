@@ -1,66 +1,79 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { check, z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
+  CardFooter,
   CardTitle,
+  CardAction,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
 import {
+  useFormField,
   Form,
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
   FormField,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
 
-const loginSchema = z.object({
+const signupSchema = z.object({
   email: z.email("Please enter a valid email address"),
-  password: z.string().min(1,"Password is required"),
+  password: z.string().min(1,"Password is required"),  
+  confirmPassword: z.string(),  
+})
+.refine( data => data.password === data.confirmPassword,{
+  message: "passwords don't match",
+  path: ["confirmPassword"]
 })
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
-export const LoginForm = () => {
+export const RegisterForm = () => {
   const router = useRouter();
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     }
   });
 
-  const onSubmit = async (values: LoginFormValues) => {
-    console.log("Sign-In Values:", values);
-    await authClient.signIn.email(
+  const onSubmit = async (values: SignupFormValues) => {
+    console.log("SignUp Values:",values);
+    const {data, error } = await authClient.signUp.email(
       {
+        name: values.email,
         email: values.email,
         password: values.password,
         callbackURL: "/",
       },
       {
         onSuccess: () => {
-          toast.success("Sign-in Successful")
+          toast.success("Sign-up Successful")
           router.push("/")
         },
         onError: (ctx) => {
           toast.error(ctx.error.message)
         }
       }
-        
     )
+    console.log(data,error);
   }
 
   const isPending = form.formState.isSubmitting;
@@ -70,10 +83,10 @@ export const LoginForm = () => {
       <Card>
         <CardHeader className="text-center">
           <CardTitle>
-            Welcome Back
+            Get Started
           </CardTitle>
           <CardDescription>
-            Login to Continue
+            Create an account to Get Started
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,7 +100,13 @@ export const LoginForm = () => {
                     type="button"
                     disabled={isPending}
                   >
-                    Continue with GitHub
+                    <Image
+                      alt="google" 
+                      src="/logos/google.svg" 
+                      width={20} 
+                      height={20}
+                    />
+                    Continue with Google
                   </Button>
                   <Button
                     variant="outline"
@@ -95,11 +114,17 @@ export const LoginForm = () => {
                     type="button"
                     disabled={isPending}
                   >
-                    Continue with Google
+                    <Image
+                      alt="githb" 
+                      src="/logos/github.svg" 
+                      width={20} 
+                      height={20}
+                    />
+                    Continue with GitHub
                   </Button>
                 </div>
               </div>
-              <div className="grid gap-6">
+              <div className="grid gap-6 mt-5">
                 <FormField
                   control={form.control}
                   name="email"
@@ -134,20 +159,37 @@ export const LoginForm = () => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({field}) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="********"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage/>
+                    </FormItem>
+                  )}
+                />
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={isPending}
                 >
-                  Login
+                  Signup
                 </Button>
                 <div className="text-center text-sm">
-                  Don&apos;t have an account?{" "}
+                  Already Have an Account?{" "}
                   <Link
-                    href="/signup"
+                    href="/login"
                     className="underline underline-offset-4"
                   >
-                    Sign Up
+                    Login
                   </Link>
                 </div>
               </div>
