@@ -1,0 +1,9 @@
+procs:
+  next:
+    cmd: ["cmd", "/c", "npm", "run", "dev"]
+
+  inngest:
+    cmd: ["cmd", "/c", "npm", "run", "inngest:dev"]
+
+  prisma:
+    cmd: ["cmd", "/c", "npx", "prisma", "studio"]
